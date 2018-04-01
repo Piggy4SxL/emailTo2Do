@@ -21,8 +21,8 @@ public class WebConfig {
                 Ssl ssl = new Ssl();
                 ssl.setProtocol("TLSv1.2");
                 System.out.println(ssl.getProtocol());
-                ssl.setKeyStore("classpath:sxlfw.site.pfx");
-                ssl.setKeyStorePassword("xilai123");
+                ssl.setKeyStore("classpath:emailto2do.cn.pfx");
+                ssl.setKeyStorePassword("aw4aagjq8j2ofj");
                 container.setSsl(ssl);
                 container.setPort(443);
             }
