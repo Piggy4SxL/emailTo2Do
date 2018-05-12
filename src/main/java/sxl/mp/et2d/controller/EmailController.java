@@ -185,6 +185,15 @@ public class EmailController {
         return modelMap;
     }
 
+    @GetMapping("/getAllUsers")
+    @ResponseBody
+    private Map<String, Object> getAllUsers(){
+        Map<String, Object> modelMap = new HashMap<>();
+        modelMap.put("phones", autoRegister);
+
+        return modelMap;
+    }
+
     private Map<String, String> fillUser(String phone, String password) {
         if (!allowUsers.containsKey(phone))
             allowUsers.put(phone, MD5.getMd5(password));
