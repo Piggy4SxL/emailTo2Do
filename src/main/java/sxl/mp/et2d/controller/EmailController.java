@@ -25,7 +25,8 @@ public class EmailController {
     @Autowired
     private MailService mailService;
     private Map<String, String> allowUsers = new HashMap<>();
-    private String[] autoRegister = new String[]{"15620998276", "13352029150"};
+    private StringBuffer autoRegisterBuffer = new StringBuffer();
+    private String[] autoRegister;
 
     @RequestMapping("")
     private String emailForm() {
@@ -70,6 +71,9 @@ public class EmailController {
         String phone = HttpServletRequestUtil.getString(request, "phone");
         String password = HttpServletRequestUtil.getString(request, "password");
 
+        autoRegisterBuffer = initStringBuffer(autoRegisterBuffer);
+        autoRegister = StringBufferToString(autoRegisterBuffer);
+
         if (allowUsers.containsKey(phone)) {
             if (allowUsers.get(phone).equals(MD5.getMd5(password)))
                 modelMap.put("success", true);
@@ -103,9 +107,12 @@ public class EmailController {
 
         allowUsers = fillUser(phone, password);
 
-        if (count == allowUsers.size() - 1)
+        if (count == allowUsers.size() - 1) {
             modelMap.put("success", true);
-        else {
+
+            if (!allowUsers.containsKey(phone))
+                autoRegisterBuffer.append(phone);
+        } else {
             modelMap.put("success", false);
             modelMap.put("errMsg", "注册失败");
         }
@@ -152,15 +159,21 @@ public class EmailController {
     private Map<String, Object> delUser(@RequestBody Map<String, Object> reqMap) {
         Map<String, Object> modelMap = new HashMap<>();
         String phone = reqMap.get("phone").toString();
-        int count = allowUsers.size();
 
-        allowUsers.remove(phone);
+        if (allowUsers.containsKey(phone)) {
+            int count = allowUsers.size();
 
-        if (count == allowUsers.size() + 1)
-            modelMap.put("success", true);
-        else {
+            allowUsers.remove(phone);
+
+            if (count == allowUsers.size() + 1)
+                modelMap.put("success", true);
+            else {
+                modelMap.put("success", false);
+                modelMap.put("errMsg", "删除失败");
+            }
+        }else {
             modelMap.put("success", false);
-            modelMap.put("errMsg", "删除失败");
+            modelMap.put("errMsg", "该账户已被重置");
         }
         return modelMap;
     }
@@ -189,6 +202,10 @@ public class EmailController {
     @ResponseBody
     private Map<String, Object> getAllUsers(){
         Map<String, Object> modelMap = new HashMap<>();
+
+        autoRegisterBuffer = initStringBuffer(autoRegisterBuffer);
+        autoRegister = StringBufferToString(autoRegisterBuffer);
+
         modelMap.put("phones", autoRegister);
 
         return modelMap;
@@ -199,5 +216,16 @@ public class EmailController {
             allowUsers.put(phone, MD5.getMd5(password));
 
         return allowUsers;
+    }
+
+    private String[] StringBufferToString(StringBuffer autoRegisterBuffer){
+        return autoRegisterBuffer.toString().split(",");
+    }
+
+    private StringBuffer initStringBuffer(StringBuffer autoRegisterBuffer){
+        autoRegisterBuffer.append("15620998276");
+        autoRegisterBuffer.append("13352029150");
+
+        return autoRegisterBuffer;
     }
 }
