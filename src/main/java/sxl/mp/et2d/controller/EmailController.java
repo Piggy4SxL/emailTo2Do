@@ -27,6 +27,7 @@ public class EmailController {
     private Map<String, String> allowUsers = new HashMap<>();
     private StringBuffer autoRegisterBuffer = new StringBuffer();
     private String[] autoRegister;
+    private static final String SEPARATOR = ",";
 
     @RequestMapping("")
     private String emailForm() {
@@ -71,7 +72,7 @@ public class EmailController {
         String phone = HttpServletRequestUtil.getString(request, "phone");
         String password = HttpServletRequestUtil.getString(request, "password");
 
-        autoRegisterBuffer = initStringBuffer(autoRegisterBuffer);
+        initStringBuffer(autoRegisterBuffer);
         autoRegister = StringBufferToString(autoRegisterBuffer);
 
         if (allowUsers.containsKey(phone)) {
@@ -108,10 +109,9 @@ public class EmailController {
         allowUsers = fillUser(phone, password);
 
         if (count == allowUsers.size() - 1) {
+            autoRegisterBuffer.append(phone + SEPARATOR);
             modelMap.put("success", true);
 
-            if (!allowUsers.containsKey(phone))
-                autoRegisterBuffer.append(phone);
         } else {
             modelMap.put("success", false);
             modelMap.put("errMsg", "注册失败");
@@ -169,7 +169,7 @@ public class EmailController {
                 modelMap.put("success", true);
             else {
                 modelMap.put("success", false);
-                modelMap.put("errMsg", "删除失败");
+                modelMap.put("errMsg", "重置失败");
             }
         }else {
             modelMap.put("success", false);
@@ -177,6 +177,33 @@ public class EmailController {
         }
         return modelMap;
     }
+
+    @DeleteMapping("/removeUser")
+    @ResponseBody
+    private Map<String, Object> removeUser(@RequestBody Map<String, Object> reqMap) {
+        Map<String, Object> modelMap = new HashMap<>();
+        String phone = reqMap.get("phone").toString();
+        int indexOf = autoRegisterBuffer.indexOf(phone);
+
+        if (allowUsers.containsKey(phone)) {
+            int count = allowUsers.size();
+
+            allowUsers.remove(phone);
+            autoRegisterBuffer.delete(indexOf, indexOf + 12);
+
+            if (count == allowUsers.size() + 1)
+                modelMap.put("success", true);
+            else {
+                modelMap.put("success", false);
+                modelMap.put("errMsg", "注销失败");
+            }
+        }else {
+            modelMap.put("success", false);
+            modelMap.put("errMsg", "该账户已被注销");
+        }
+        return modelMap;
+    }
+
 
     @GetMapping("/initUser")
     @ResponseBody
@@ -203,7 +230,7 @@ public class EmailController {
     private Map<String, Object> getAllUsers(){
         Map<String, Object> modelMap = new HashMap<>();
 
-        autoRegisterBuffer = initStringBuffer(autoRegisterBuffer);
+        initStringBuffer(autoRegisterBuffer);
         autoRegister = StringBufferToString(autoRegisterBuffer);
 
         modelMap.put("phones", autoRegister);
@@ -222,10 +249,10 @@ public class EmailController {
         return autoRegisterBuffer.toString().split(",");
     }
 
-    private StringBuffer initStringBuffer(StringBuffer autoRegisterBuffer){
-        autoRegisterBuffer.append("15620998276");
-        autoRegisterBuffer.append("13352029150");
-
-        return autoRegisterBuffer;
+    private void initStringBuffer(StringBuffer autoRegisterBuffer){
+        if (autoRegisterBuffer.length() == 0) {
+            autoRegisterBuffer.append("15620998276,");
+            autoRegisterBuffer.append("13352029150,");
+        }
     }
 }
